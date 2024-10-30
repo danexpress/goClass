@@ -80,6 +80,19 @@ func (db database) fetch(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "new price %s for price %s\n", item, db[item])
 }
 
+func (db database) drop(w http.ResponseWriter, req *http.Request) {
+	item := req.URL.Query().Get("item")
+
+	if _, ok := db[item]; !ok {
+		msg := fmt.Sprintf("no such item: %q", item)
+		http.Error(w, msg, http.StatusNotFound)
+		return
+	}
+
+	delete(db, item)
+	fmt.Fprintf(w, "dropped %s\n", item)
+}
+
 func main() {
 	db := database{
 		"shoe":  50,
@@ -89,6 +102,7 @@ func main() {
 	http.HandleFunc("/list", db.list)
 	http.HandleFunc("/create", db.add)
 	http.HandleFunc("/update", db.update)
+	http.HandleFunc("/delete", db.drop)
 	http.HandleFunc("/read", db.fetch)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
